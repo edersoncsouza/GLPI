@@ -10,6 +10,7 @@ $group_user_id = isset($_POST['group_user_id'])
     : 0;
 
 $last_active_participant = false;
+$last_coordinator = false;
 $group_name = '';
 
 if ($group_user_id > 0) {
@@ -49,6 +50,12 @@ if ($group_user_id > 0) {
                     $groups_id,
                     $users_id
                 );
+
+            $last_coordinator =
+                \GlpiPlugin\Filacircular\GroupRemoval::isLastCoordinator(
+                    $groups_id,
+                    $users_id
+                );
         }
     }
 }
@@ -56,5 +63,6 @@ if ($group_user_id > 0) {
 echo json_encode([
     'success' => true,
     'last_active_participant' => $last_active_participant,
+    'last_coordinator' => $last_coordinator,
     'group_name' => $group_name
 ]);

@@ -27,24 +27,33 @@
         }
     }).done(function (response) {
         if (response.last_active_participant) {
-            glpi_confirm({
-                title: 'Confirmação',
-                message:
-                    'Este é o último usuário ativo no grupo ' + response.group_name +
-                    '. Tem certeza que deseja remover?' +
-                    '<br><br>' +
-                    'OBS: Caso seja removido as demandas deste grupo ficarão paradas e sem atendimento. ' +
-                    'Recomenda-se a ativação de outros usuários do grupo ' + response.group_name +
-                    ' ou a inclusão de outros usuários neste grupo ' + response.group_name + '.',
-                confirm_callback: function () {
-                    form.submit();
-                },
-                cancel_callback: function () {
-                    $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
-                }
-            });
+            const confirmed = window.confirm(
+                'Este é o último usuário ativo no grupo ' + response.group_name +
+                '. Tem certeza que deseja remover?\n\n' +
+                'OBS: Caso seja removido as demandas deste grupo ficarão paradas e sem atendimento. ' +
+                'Recomenda-se a ativação de outros usuários do grupo ' + response.group_name +
+                ' ou a inclusão de outros usuários neste grupo ' + response.group_name + '.'
+            );
 
-            return;
+            if (!confirmed) {
+                $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
+                return;
+            }
+        } else if (response.last_coordinator) {
+            const confirmed = window.confirm(
+                'Este é o último Coordenador do grupo ' + response.group_name +
+                '. Tem certeza que deseja remover?\n\n' +
+                'OBS: É necessário que exista pelo menos um Coordenador no grupo. ' +
+                'Sem um Coordenador, não haverá um usuário capaz de gerenciar os participantes do grupo, ' +
+                'atribuir diretamente um chamado a um usuário ou refazer a distribuição de um chamado ' +
+                'entre os técnicos ativos disponíveis. Recomenda-se que, antes de remover este usuário, ' +
+                'outro Técnico ativo seja promovido a Coordenador do grupo ' + response.group_name + '.'
+            );
+
+            if (!confirmed) {
+                $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
+                return;
+            }
         }
 
         form.submit();
