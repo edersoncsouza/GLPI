@@ -1,4 +1,4 @@
-﻿name: glpi
+name: glpi
 
 services:
 
@@ -7,6 +7,7 @@ services:
     restart: "unless-stopped"
     volumes:
       - glpi_data:/var/glpi
+      - ./filacircular:/var/www/glpi/plugins/filacircular
     env_file:
       - .env
     depends_on:
