@@ -57,6 +57,22 @@ Cada Coordenador atua somente nos grupos em que foi configurado como Coordenador
 
 A configuração **"Coordenadores podem gerenciar coordenadores"** é específica de cada grupo.
 
+## Remoção do último Coordenador
+
+Quando um usuário está sendo removido de um grupo e é o último Coordenador da FilaCircular naquele grupo, o sistema apresenta uma confirmação antes de permitir a remoção.
+
+A confirmação informa que é necessário existir um Coordenador para executar as atividades próprias da FilaCircular.
+
+Sem um Coordenador, não haverá um usuário capaz de:
+
+- gerenciar os participantes do grupo;
+- atribuir diretamente um chamado a um usuário;
+- refazer a distribuição de um chamado entre os técnicos ativos disponíveis no grupo.
+
+Recomenda-se que, antes de remover o último Coordenador, outro Técnico ativo seja promovido a Coordenador do grupo.
+
+A remoção continua sendo permitida após a confirmação.
+
 ## Distribuição
 
 A distribuição utiliza o princípio de fila circular (Round-Robin).
