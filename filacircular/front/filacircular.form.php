@@ -188,4 +188,42 @@ if (isset($_POST['remove_coordinator'])) {
     Html::redirect($group->getFormURLWithID($groups_id));
 }
 
+if (isset($_POST['set_emergency_email'])) {
+
+    if (!Session::haveRight('config', UPDATE)) {
+        Session::addMessageAfterRedirect(
+            'Você não tem permissão para alterar o e-mail de emergência.',
+            false,
+            ERROR
+        );
+
+        Html::redirect($group->getFormURLWithID($groups_id));
+    }
+
+    $emergency_email = isset($_POST['emergency_email'])
+        ? trim($_POST['emergency_email'])
+        : '';
+
+    $updated = \GlpiPlugin\Filacircular\FilaCircular::setEmergencyEmail(
+        $groups_id,
+        $emergency_email
+    );
+
+    if ($updated) {
+        Session::addMessageAfterRedirect(
+            'E-mail de emergência atualizado com sucesso.',
+            false,
+            INFO
+        );
+    } else {
+        Session::addMessageAfterRedirect(
+            'Não foi possível atualizar o e-mail de emergência.',
+            false,
+            ERROR
+        );
+    }
+
+    Html::redirect($group->getFormURLWithID($groups_id));
+}
+
 Html::back();

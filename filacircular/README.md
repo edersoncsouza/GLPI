@@ -113,6 +113,14 @@ A verificação é realizada pelo backend.
 
 O JavaScript apenas intercepta o envio da operação nativa, consulta o backend e apresenta a confirmação quando necessário.
 
+### E-mail de emergência
+
+Cada grupo pode possuir um único e-mail de emergência.
+
+O e-mail de emergência é configurado na área administrativa da FilaCircular e somente usuários com permissão de administrador do GLPI podem visualizá-lo e alterá-lo.
+
+Quando um grupo ficar sem participante ativo, a notificação será enviada para todos os Coordenadores do grupo e para o e-mail de emergência configurado para aquele grupo.
+
 ## Estado atual
 
 ### Implementado e testado

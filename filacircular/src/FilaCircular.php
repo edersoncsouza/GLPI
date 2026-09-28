@@ -29,6 +29,7 @@ class FilaCircular extends CommonGLPI
 
         $enabled = false;
         $allow_coordinator_management = false;
+        $emergency_email = '';
 
         $result = $DB->request([
             'FROM'   => $table,
@@ -39,6 +40,7 @@ class FilaCircular extends CommonGLPI
         foreach ($result as $row) {
             $enabled = ((int) $row['enabled'] === 1);
             $allow_coordinator_management = ((int) $row['allow_coordinator_management'] === 1);
+            $emergency_email = $row['emergency_email'] ?? '';
         }
 
         echo '<div class="p-3">';
@@ -99,9 +101,22 @@ class FilaCircular extends CommonGLPI
             echo 'Não';
             echo '</label>';
             echo '</div>';
-
             echo '<button type="submit" name="set_coordinator_management" class="btn btn-primary mt-2">';
             echo 'Salvar configuração';
+            echo '</button>';
+
+            echo '<hr class="my-3">';
+
+            echo '<div class="mb-2">';
+            echo '<strong>E-mail de emergência:</strong>';
+            echo '</div>';
+
+            echo '<div class="mb-2" style="max-width: 500px;">';
+            echo '<input type="email" class="form-control" name="emergency_email" value="' . htmlescape($emergency_email) . '" maxlength="255">';
+            echo '</div>';
+
+            echo '<button type="submit" name="set_emergency_email" class="btn btn-primary mt-2">';
+            echo 'Salvar e-mail de emergência';
             echo '</button>';
 
             \Html::closeForm();
@@ -316,6 +331,31 @@ class FilaCircular extends CommonGLPI
             false,
             INFO
         );
+
+        return true;
+    }
+
+    public static function setEmergencyEmail($groups_id, $emergency_email)
+    {
+        global $DB;
+
+        $groups_id = (int) $groups_id;
+        $emergency_email = trim($emergency_email);
+
+        if ($emergency_email !== '' && !filter_var($emergency_email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $table = 'glpi_plugin_filacircular_rr_groups';
+
+        $DB->doQuery("
+            INSERT INTO `$table`
+                (`groups_id`, `enabled`, `emergency_email`)
+            VALUES
+                ($groups_id, 0, " . $DB->quote($emergency_email) . ")
+            ON DUPLICATE KEY UPDATE
+                `emergency_email` = " . $DB->quote($emergency_email) . "
+        ");
 
         return true;
     }
