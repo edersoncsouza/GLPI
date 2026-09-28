@@ -27,18 +27,24 @@
         }
     }).done(function (response) {
         if (response.last_active_participant) {
-            const confirmed = window.confirm(
-                'Este é o último usuário ativo no grupo ' + response.group_name +
-                '. Tem certeza que deseja remover?\n\n' +
-                'OBS: Caso seja removido as demandas deste grupo ficarão paradas e sem atendimento. ' +
-                'Recomenda-se a ativação de outros usuários do grupo ' + response.group_name +
-                ' ou a inclusão de outros usuários neste grupo ' + response.group_name + '.'
-            );
+            glpi_confirm({
+                title: 'Confirmação',
+                message:
+                    'Este é o último usuário ativo no grupo ' + response.group_name +
+                    '. Tem certeza que deseja remover?' +
+                    '<br><br>' +
+                    'OBS: Caso seja removido as demandas deste grupo ficarão paradas e sem atendimento. ' +
+                    'Recomenda-se a ativação de outros usuários do grupo ' + response.group_name +
+                    ' ou a inclusão de outros usuários neste grupo ' + response.group_name + '.',
+                confirm_callback: function () {
+                    form.submit();
+                },
+                cancel_callback: function () {
+                    $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
+                }
+            });
 
-            if (!confirmed) {
-                $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
-                return;
-            }
+            return;
         }
 
         form.submit();
