@@ -20,7 +20,7 @@ function plugin_init_filacircular()
     $PLUGIN_HOOKS['item_add']['filacircular']['Group_User']
         = ['GlpiPlugin\Filacircular\GroupUser', 'add'];
 
-    $PLUGIN_HOOKS['item_delete']['filacircular']['Group_User']
+    $PLUGIN_HOOKS['item_purge']['filacircular']['Group_User']
         = ['GlpiPlugin\Filacircular\GroupUser', 'purge'];
 
     $PLUGIN_HOOKS['post_prepareadd']['filacircular']['Ticket']

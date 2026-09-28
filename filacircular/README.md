@@ -73,6 +73,11 @@ Recomenda-se que, antes de remover o último Coordenador, outro Técnico ativo s
 
 A remoção continua sendo permitida após a confirmação.
 
+### Ausência de Coordenador
+
+Quando um grupo não possui nenhum Coordenador da FilaCircular, a tela de configuração informa que nenhum Coordenador técnico está definido e orienta que é necessário definir pelo menos um Coordenador para que seja possível gerenciar os participantes, atribuir chamados diretamente e refazer a distribuição de chamados entre os técnicos ativos.
+
+
 ## Distribuição
 
 A distribuição utiliza o princípio de fila circular (Round-Robin).
@@ -90,6 +95,8 @@ A FilaCircular mantém uma tabela própria para controlar a participação no ro
 Quando um usuário é incluído em um grupo, sua participação na FilaCircular é criada ou reativada como ativa.
 
 A remoção do usuário do grupo nativo do GLPI continua sendo permitida.
+
+Quando um usuário é removido da associação nativa com um grupo, sua participação como Coordenador da FilaCircular naquele grupo também é removida automaticamente.
 
 ## Remoção do último participante ativo
 

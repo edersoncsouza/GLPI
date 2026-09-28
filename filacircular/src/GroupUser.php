@@ -39,6 +39,12 @@ class GroupUser
               AND `users_id` = $users_id
         ");
 
+        $DB->doQuery("
+            DELETE FROM `glpi_plugin_filacircular_group_coordinators`
+            WHERE `groups_id` = $groups_id
+              AND `users_id` = $users_id
+        ");
+
         return $groupUser;
     }
 

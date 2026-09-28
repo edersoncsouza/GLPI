@@ -168,7 +168,11 @@ class FilaCircular extends CommonGLPI
         }
 
         if (!$has_coordinators) {
-            echo '<li>Nenhum coordenador definido.</li>';
+            echo '<li class="alert alert-warning">';
+            echo '<strong>Nenhum coordenador técnico definido.</strong>';
+            echo '<br>';
+            echo 'É necessário ter pelo menos um Coordenador técnico para gerenciar os participantes, atribuir chamados diretamente e refazer a distribuição de chamados entre os técnicos ativos.';
+            echo '</li>';
         }
 
         echo '</ul>';
