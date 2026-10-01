@@ -20,9 +20,10 @@ class NotificationTargetFilaCircular extends NotificationTarget
     public function getTags()
     {
         $tags_all = [
-            'filacircular.group'    => 'Grupo',
-            'filacircular.user'     => 'Técnico removido',
-            'filacircular.datetime' => 'Data e hora',
+            'filacircular.group'      => 'Grupo',
+            'filacircular.user'       => 'Técnico removido',
+            'filacircular.datetime'   => 'Data e hora',
+            'filacircular.removed_by' => 'Usuário que realizou a remoção',
         ];
 
         foreach ($tags_all as $tag => $label) {
@@ -119,9 +120,11 @@ class NotificationTargetFilaCircular extends NotificationTarget
 
     public function addDataForTemplate($event, $options = [])
     {
+
         $this->data['##filacircular.group##'] = '';
         $this->data['##filacircular.user##'] = '';
         $this->data['##filacircular.datetime##'] = '';
+        $this->data['##filacircular.removed_by##'] = '';
 
         if (!isset($options['groups_id']) || !isset($options['users_id'])) {
             return;
@@ -132,6 +135,7 @@ class NotificationTargetFilaCircular extends NotificationTarget
 
         $groups_id = (int) $options['groups_id'];
         $users_id = (int) $options['users_id'];
+        $removed_by_user_id = (int) ($options['removed_by_user_id'] ?? 0);
 
         if ($group->getFromDB($groups_id)) {
             $this->data['##filacircular.group##'] = $group->getName();
@@ -139,6 +143,14 @@ class NotificationTargetFilaCircular extends NotificationTarget
 
         if ($user->getFromDB($users_id)) {
             $this->data['##filacircular.user##'] = $user->getName();
+        }
+
+        if ($removed_by_user_id > 0) {
+            $removed_by_user = new \User();
+
+            if ($removed_by_user->getFromDB($removed_by_user_id)) {
+                $this->data['##filacircular.removed_by##'] = $removed_by_user->getName();
+            }
         }
 
         $datetime = $options['date_time'] ?? '';

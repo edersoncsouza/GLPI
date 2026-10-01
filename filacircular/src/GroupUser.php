@@ -27,6 +27,14 @@ class GroupUser
 
     public static function purge($groupUser)
     {
+        file_put_contents(
+            '/tmp/filacircular_purge_debug.txt',
+            date('Y-m-d H:i:s')
+            . ' login_user_id=' . (int) \Session::getLoginUserID()
+            . PHP_EOL,
+            FILE_APPEND
+        );
+
         global $DB;
 
         $groups_id = (int) $groupUser->fields['groups_id'];
@@ -128,9 +136,10 @@ class GroupUser
                     'last_active_removed',
                     new FilaCircular(),
                     [
-                        'groups_id' => $groups_id,
-                        'users_id'  => $users_id,
-                        'date_time' => date('Y-m-d H:i:s')
+                        'groups_id'         => $groups_id,
+                        'users_id'          => $users_id,
+                        'date_time'         => date('Y-m-d H:i:s'),
+                        'removed_by_user_id' => (int) \Session::getLoginUserID()
                     ]
                 );
             }
@@ -155,6 +164,14 @@ class GroupUser
             }
 
             if ($fila_circular_ativa) {
+                file_put_contents(
+                    '/tmp/filacircular_purge_debug.txt',
+                    date('Y-m-d H:i:s')
+                    . ' removed_by_user_id='
+                    . (int) \Session::getLoginUserID()
+                    . PHP_EOL,
+                    FILE_APPEND
+                );
                 $notification_result = NotificationEvent::raiseEvent(
                     'last_coordinator_removed',
                     new FilaCircular(),

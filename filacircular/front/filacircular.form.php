@@ -151,7 +151,7 @@ if (isset($_POST['add_coordinator'])) {
 
         if ($email === '') {
             Session::addMessageAfterRedirect(
-                'É necessário cadastrar um e-mail para este usuário antes de torná-lo Coordenador.',
+                'É necessário cadastrar um e-mail para este usuário no cadastro nativo de usuários do GLPI antes de torná-lo Coordenador.',
                 false,
                 ERROR
             );
