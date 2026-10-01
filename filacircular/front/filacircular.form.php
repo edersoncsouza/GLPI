@@ -72,6 +72,22 @@ if (isset($_POST['set_participation'])) {
     }
 
     if ($users_id > 0) {
+        if (
+            $is_active === 0
+            && \GlpiPlugin\Filacircular\GroupRemoval::isLastActiveParticipant(
+                $groups_id,
+                $users_id
+            )
+        ) {
+            Session::addMessageAfterRedirect(
+                'Não é possível desativar este técnico porque ele é o último técnico ativo da FilaCircular neste grupo. Se ele for desativado, os chamados deste grupo ficarão sem atendimento. Para desativá-lo, primeiro adicione outro usuário ao grupo ou ative um usuário que já esteja inativo na FilaCircular.',
+                false,
+                ERROR
+            );
+
+            Html::redirect($group->getFormURLWithID($groups_id));
+        }
+
         $updated = \GlpiPlugin\Filacircular\GroupUser::setActive(
             $groups_id,
             $users_id,
@@ -85,12 +101,6 @@ if (isset($_POST['set_participation'])) {
                     : 'Participação desativada com sucesso.',
                 false,
                 INFO
-            );
-        } else {
-            Session::addMessageAfterRedirect(
-                'Não foi possível alterar a participação deste técnico.',
-                false,
-                ERROR
             );
         }
     }

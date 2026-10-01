@@ -296,19 +296,38 @@ class FilaCircular extends CommonGLPI
                 ]);
 
                 if ($is_active) {
+                    $is_last_active = \GlpiPlugin\Filacircular\GroupRemoval::isLastActiveParticipant(
+                        $groups_id,
+                        $users_id
+                    );
+
                     echo '<button type="submit" name="set_participation" class="btn btn-sm btn-outline-primary"';
-                    echo ' onclick="';
-                    echo "const form = this.closest('form');";
-                    echo "const button = this;";
-                    echo "glpi_confirm({";
-                    echo "title: 'Confirmação',";
-                    echo "message: 'Tem certeza que deseja desativar este técnico da FilaCircular?',";
-                    echo "confirm_callback: function () {";
-                    echo "form.requestSubmit(button);";
-                    echo "},";
-                    echo "cancel_callback: function () {}";
-                    echo "});";
-                    echo ' return false;">';
+
+                    if ($is_last_active) {
+                        echo ' onclick="';
+                        echo "alert('Não é possível desativar o técnico "
+                            . htmlescape($username)
+                            . " porque ele é o último técnico ativo da FilaCircular neste grupo.\\n\\n"
+                            . "Se ele for desativado, os chamados deste grupo ficarão sem atendimento.\\n\\n"
+                            . "Para desativá-lo, primeiro adicione outro usuário ao grupo ou ative um usuário que já esteja inativo na FilaCircular.');";
+                        echo ' return false;">';
+                    } else {
+                        echo ' onclick="';
+                        echo "const form = this.closest('form');";
+                        echo "const button = this;";
+                        echo "glpi_confirm({";
+                        echo "title: 'Confirmação',";
+                        echo "message: 'Tem certeza que deseja desativar o técnico <strong>"
+                            . htmlescape($username)
+                            . "</strong> da FilaCircular?',";
+                        echo "confirm_callback: function () {";
+                        echo "form.requestSubmit(button);";
+                        echo "},";
+                        echo "cancel_callback: function () {}";
+                        echo "});";
+                        echo ' return false;">';
+                    }
+
                     echo 'Desativar';
                     echo '</button>';
                 } else {
