@@ -7,6 +7,12 @@ use Session;
 
 class FilaCircular extends CommonGLPI
 {
+
+    public static function getTypeName($nb = 0)
+    {
+        return 'FilaCircular';
+    }
+
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
         if (!$withtemplate && $item instanceof \Group) {
@@ -289,9 +295,27 @@ class FilaCircular extends CommonGLPI
                     'value' => $is_active ? 0 : 1
                 ]);
 
-                echo '<button type="submit" name="set_participation" class="btn btn-sm btn-outline-primary">';
-                echo $is_active ? 'Desativar' : 'Ativar';
-                echo '</button>';
+                if ($is_active) {
+                    echo '<button type="submit" name="set_participation" class="btn btn-sm btn-outline-primary"';
+                    echo ' onclick="';
+                    echo "const form = this.closest('form');";
+                    echo "const button = this;";
+                    echo "glpi_confirm({";
+                    echo "title: 'Confirmação',";
+                    echo "message: 'Tem certeza que deseja desativar este técnico da FilaCircular?',";
+                    echo "confirm_callback: function () {";
+                    echo "form.requestSubmit(button);";
+                    echo "},";
+                    echo "cancel_callback: function () {}";
+                    echo "});";
+                    echo ' return false;">';
+                    echo 'Desativar';
+                    echo '</button>';
+                } else {
+                    echo '<button type="submit" name="set_participation" class="btn btn-sm btn-outline-primary">';
+                    echo 'Ativar';
+                    echo '</button>';
+                }
 
                 \Html::closeForm();
             }

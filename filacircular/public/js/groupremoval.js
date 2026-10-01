@@ -26,6 +26,31 @@
             group_user_id: groupUserId
         }
     }).done(function (response) {
+
+        const submitForm = function () {
+            const formData = new FormData(form);
+
+            const submitFormElement = document.createElement('form');
+
+            submitFormElement.method = 'post';
+            submitFormElement.action = form.getAttribute('action');
+            submitFormElement.style.display = 'none';
+
+            for (const [name, value] of formData.entries()) {
+                const input = document.createElement('input');
+
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+
+                submitFormElement.appendChild(input);
+            }
+
+            document.body.appendChild(submitFormElement);
+
+            HTMLFormElement.prototype.submit.call(submitFormElement);
+        };
+
         if (response.last_active_participant) {
             glpi_confirm({
                 title: 'Confirmação',
@@ -37,7 +62,7 @@
                     'Recomenda-se a ativação de outros usuários do grupo ' + response.group_name +
                     ' ou a inclusão de outros usuários neste grupo ' + response.group_name + '.',
                 confirm_callback: function () {
-                    form.submit();
+                    submitForm();
                 },
                 cancel_callback: function () {
                     $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
@@ -60,7 +85,7 @@
                     'entre os técnicos ativos disponíveis. Recomenda-se que, antes de remover este usuário, ' +
                     'outro Técnico ativo seja promovido a Coordenador do grupo ' + response.group_name + '.',
                 confirm_callback: function () {
-                    form.submit();
+                    submitForm();
                 },
                 cancel_callback: function () {
                     $(form).closest('.modal').find('[data-bs-dismiss="modal"]').first().trigger('click');
@@ -70,7 +95,7 @@
             return;
         }
 
-        form.submit();
+        submitForm();
     }).fail(function (xhr) {
         console.error(
             'FilaCircular - erro ao verificar a remoção:',
@@ -78,6 +103,25 @@
             xhr.responseText
         );
 
-        form.submit();
+        const formData = new FormData(form);
+
+        const submitFormElement = document.createElement('form');
+
+        submitFormElement.method = 'post';
+        submitFormElement.action = form.getAttribute('action');
+        submitFormElement.style.display = 'none';
+
+        for (const [name, value] of formData.entries()) {
+            const input = document.createElement('input');
+
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            submitFormElement.appendChild(input);
+        }
+
+        document.body.appendChild(submitFormElement);
+
+        HTMLFormElement.prototype.submit.call(submitFormElement);
     });
 });

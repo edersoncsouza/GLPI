@@ -1,5 +1,6 @@
 <?php
 namespace GlpiPlugin\Filacircular;
+use NotificationEvent;
 
 class GroupUser
 {
@@ -33,6 +34,65 @@ class GroupUser
 
         $table = 'glpi_plugin_filacircular_group_users';
 
+        $last_active_participant = false;
+        $last_coordinator = false;
+
+        $result = $DB->request([
+            'FROM' => $table,
+            'WHERE' => [
+                'groups_id' => $groups_id,
+                'is_active' => 1
+            ]
+        ]);
+
+        $active_count = 0;
+
+        foreach ($result as $row) {
+            $active_count++;
+
+            if ((int) $row['users_id'] === $users_id) {
+                $last_active_participant = true;
+            }
+        }
+
+        if ($active_count !== 1) {
+            $last_active_participant = false;
+        }
+
+        $result = $DB->request([
+            'FROM' => 'glpi_plugin_filacircular_group_coordinators',
+            'WHERE' => [
+                'groups_id' => $groups_id
+            ]
+        ]);
+
+        $coordinator_count = 0;
+
+        foreach ($result as $row) {
+            $coordinator_count++;
+
+            if ((int) $row['users_id'] === $users_id) {
+                $last_coordinator = true;
+            }
+        }
+
+        if ($coordinator_count !== 1) {
+            $last_coordinator = false;
+        }
+
+        file_put_contents(
+            '/tmp/filacircular_purge_debug.txt',
+            date('Y-m-d H:i:s')
+            . ' groups_id=' . $groups_id
+            . ' users_id=' . $users_id
+            . ' active_count=' . $active_count
+            . ' last_active=' . ($last_active_participant ? '1' : '0')
+            . ' coordinator_count=' . $coordinator_count
+            . ' last_coordinator=' . ($last_coordinator ? '1' : '0')
+            . PHP_EOL,
+            FILE_APPEND
+        );
+
         $DB->doQuery("
             DELETE FROM `$table`
             WHERE `groups_id` = $groups_id
@@ -45,9 +105,79 @@ class GroupUser
               AND `users_id` = $users_id
         ");
 
+        if ($last_active_participant) {
+
+            $result = $DB->request([
+                'FROM' => 'glpi_plugin_filacircular_rr_groups',
+                'WHERE' => [
+                    'groups_id' => $groups_id,
+                    'enabled'   => 1
+                ],
+                'LIMIT' => 1
+            ]);
+
+            $fila_circular_ativa = false;
+
+            foreach ($result as $row) {
+                $fila_circular_ativa = true;
+                break;
+            }
+
+            if ($fila_circular_ativa) {
+                NotificationEvent::raiseEvent(
+                    'last_active_removed',
+                    new FilaCircular(),
+                    [
+                        'groups_id' => $groups_id,
+                        'users_id'  => $users_id,
+                        'date_time' => date('Y-m-d H:i:s')
+                    ]
+                );
+            }
+        }
+
+        if ($last_coordinator) {
+
+            $result = $DB->request([
+                'FROM' => 'glpi_plugin_filacircular_rr_groups',
+                'WHERE' => [
+                    'groups_id' => $groups_id,
+                    'enabled'   => 1
+                ],
+                'LIMIT' => 1
+            ]);
+
+            $fila_circular_ativa = false;
+
+            foreach ($result as $row) {
+                $fila_circular_ativa = true;
+                break;
+            }
+
+            if ($fila_circular_ativa) {
+                $notification_result = NotificationEvent::raiseEvent(
+                    'last_coordinator_removed',
+                    new FilaCircular(),
+                    [
+                        'groups_id' => $groups_id,
+                        'users_id'  => $users_id,
+                        'date_time' => date('Y-m-d H:i:s')
+                    ]
+                );
+
+                file_put_contents(
+                    '/tmp/filacircular_purge_debug.txt',
+                    date('Y-m-d H:i:s')
+                    . ' notification_result='
+                    . var_export($notification_result, true)
+                    . PHP_EOL,
+                    FILE_APPEND
+                );
+            }
+        }
+
         return $groupUser;
     }
-
 
 
     public static function setActive($groups_id, $users_id, $is_active)
@@ -65,9 +195,34 @@ class GroupUser
             return false;
         }
 
-        if ($is_active === 0) {
+        $table = 'glpi_plugin_filacircular_group_users';
+
+        $was_active = false;
+
+        $result = $DB->request([
+            'FROM' => $table,
+            'WHERE' => [
+                'groups_id' => $groups_id,
+                'users_id'  => $users_id
+            ],
+            'LIMIT' => 1
+        ]);
+
+        foreach ($result as $row) {
+            $was_active = ((int) $row['is_active'] === 1);
+            break;
+        }
+
+        $DB->doQuery("
+            UPDATE `$table`
+            SET `is_active` = $is_active
+            WHERE `groups_id` = $groups_id
+              AND `users_id` = $users_id
+        ");
+
+        if ($is_active === 0 && $was_active) {
             $result = $DB->request([
-                'FROM' => 'glpi_plugin_filacircular_group_users',
+                'FROM' => $table,
                 'WHERE' => [
                     'groups_id' => $groups_id,
                     'is_active' => 1
@@ -80,19 +235,36 @@ class GroupUser
                 $active_count++;
             }
 
-            if ($active_count <= 1) {
-                return false;
+            if ($active_count === 0) {
+                $result = $DB->request([
+                    'FROM' => 'glpi_plugin_filacircular_rr_groups',
+                    'WHERE' => [
+                        'groups_id' => $groups_id,
+                        'enabled'   => 1
+                    ],
+                    'LIMIT' => 1
+                ]);
+
+                $fila_circular_ativa = false;
+
+                foreach ($result as $row) {
+                    $fila_circular_ativa = true;
+                    break;
+                }
+
+                if ($fila_circular_ativa) {
+                    NotificationEvent::raiseEvent(
+                        'last_active_removed',
+                        new FilaCircular(),
+                        [
+                            'groups_id' => $groups_id,
+                            'users_id'  => $users_id,
+                            'date_time' => date('Y-m-d H:i:s')
+                        ]
+                    );
+                }
             }
         }
-
-        $table = 'glpi_plugin_filacircular_group_users';
-
-        $DB->doQuery("
-            UPDATE `$table`
-            SET `is_active` = $is_active
-            WHERE `groups_id` = $groups_id
-              AND `users_id` = $users_id
-        ");
 
         return true;
     }

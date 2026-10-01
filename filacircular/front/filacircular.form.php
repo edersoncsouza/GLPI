@@ -120,6 +120,35 @@ if (isset($_POST['add_coordinator'])) {
     }
 
     if ($users_id > 0) {
+        global $DB;
+
+        $result = $DB->request([
+            'SELECT' => 'email',
+            'FROM'   => 'glpi_useremails',
+            'WHERE'  => [
+                'users_id'    => $users_id,
+                'is_default'  => 1
+            ],
+            'LIMIT' => 1
+        ]);
+
+        $email = '';
+
+        foreach ($result as $row) {
+            $email = trim($row['email'] ?? '');
+            break;
+        }
+
+        if ($email === '') {
+            Session::addMessageAfterRedirect(
+                'É necessário cadastrar um e-mail para este usuário antes de torná-lo Coordenador.',
+                false,
+                ERROR
+            );
+
+            Html::redirect($group->getFormURLWithID($groups_id));
+        }
+
         $added = \GlpiPlugin\Filacircular\GroupCoordinator::add(
             $groups_id,
             $users_id

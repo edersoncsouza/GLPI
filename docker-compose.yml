@@ -3,13 +3,16 @@ name: glpi
 services:
 
   glpi:
-    image: "glpi/glpi:11.0.3"
+    image: "glpi/glpi:11.0.9"
     restart: "unless-stopped"
     volumes:
       - glpi_data:/var/glpi
       - ./filacircular:/var/www/glpi/plugins/filacircular
+      - ./overrides/GLPIMailer.php:/var/www/glpi/src/GLPIMailer.php
     env_file:
       - .env
+    environment:
+      TZ: America/Sao_Paulo
     depends_on:
       - db
     ports:
@@ -25,6 +28,7 @@ services:
       MYSQL_DATABASE: ${GLPI_DB_NAME}
       MYSQL_USER: ${GLPI_DB_USER}
       MYSQL_PASSWORD: ${GLPI_DB_PASSWORD}
+      TZ: America/Sao_Paulo
 
 volumes:
   glpi_data:
