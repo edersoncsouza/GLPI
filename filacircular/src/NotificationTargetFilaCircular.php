@@ -135,7 +135,7 @@ class NotificationTargetFilaCircular extends NotificationTarget
 
         $groups_id = (int) $options['groups_id'];
         $users_id = (int) $options['users_id'];
-        $removed_by_user_id = (int) ($options['removed_by_user_id'] ?? 0);
+        $removed_by_user_id = (int) \Session::getLoginUserID();
 
         if ($group->getFromDB($groups_id)) {
             $this->data['##filacircular.group##'] = $group->getName();
