@@ -383,10 +383,27 @@ O objetivo é que toda configuração que pertença especificamente à FilaCircu
 
 Os próximos ajustes devem continuar sendo definidos antes da implementação.
 
+A instalação do plugin já cria automaticamente os recursos específicos de notificação necessários à FilaCircular.
+
+Durante uma atualização do FilaCircular, o plugin deverá verificar e corrigir automaticamente os recursos necessários de:
+
+- `Notification`;
+- `NotificationTemplate`;
+- traduções dos templates;
+- relações entre notificações e templates;
+- destinatários específicos da FilaCircular.
+
+Esse processo deverá:
+
+- evitar a criação de recursos duplicados;
+- preservar configurações já existentes;
+- corrigir recursos ausentes ou incompletos;
+- permitir a evolução dos recursos de notificação entre versões do plugin.
+
 Entre os pontos de evolução estão:
 
-- revisar e consolidar a instalação automática dos recursos de Notification e NotificationTemplate pelo plugin;
-- garantir que atualização do plugin preserve e atualize corretamente esses recursos;
+- implementar o mecanismo de atualização do plugin;
+- garantir a preservação e atualização automática dos recursos de notificação durante upgrades;
 - revisar a experiência visual das confirmações das operações nativas;
 - continuar os testes de instalação limpa e atualização do plugin;
 - validar o comportamento completo da FilaCircular em um ambiente novo, sem configurações manuais específicas do plugin.
