@@ -150,8 +150,20 @@ if (isset($_POST['add_coordinator'])) {
         }
 
         if ($email === '') {
+            $user = new \User();
+            $username = '';
+
+            if ($user->getFromDB($users_id)) {
+                $username = $user->getName();
+            }
+
+            $user_url = '/front/user.form.php?id=' . $users_id;
+
             Session::addMessageAfterRedirect(
-                'É necessário cadastrar um e-mail para este usuário no cadastro nativo de usuários do GLPI antes de torná-lo Coordenador.',
+                'É necessário cadastrar um e-mail para o usuário <strong>'
+                . htmlescape($username)
+                . '</strong> no cadastro nativo de usuários do GLPI antes de torná-lo Coordenador. '
+                . '<a href="' . htmlescape($user_url) . '">Abrir cadastro do usuário</a>.',
                 false,
                 ERROR
             );

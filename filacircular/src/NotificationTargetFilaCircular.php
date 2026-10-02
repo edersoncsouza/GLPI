@@ -71,7 +71,32 @@ class NotificationTargetFilaCircular extends NotificationTarget
 
         $groups_id = (int) $options['groups_id'];
 
-        if ($this->raiseevent !== 'last_coordinator_removed') {
+        if ($this->raiseevent === 'last_coordinator_removed') {
+            $users_id = (int) ($options['users_id'] ?? 0);
+
+            if ($users_id > 0) {
+                $result = $DB->request([
+                    'SELECT' => 'email',
+                    'FROM'   => 'glpi_useremails',
+                    'WHERE'  => [
+                        'users_id' => $users_id
+                    ]
+                ]);
+
+                foreach ($result as $row) {
+                    $email = trim($row['email'] ?? '');
+
+                    if ($email !== '') {
+                        $this->addToRecipientsList([
+                            'email'    => $email,
+                            'name'     => 'Coordenador removido',
+                            'language' => $CFG_GLPI['language'],
+                            'usertype' => \NotificationTarget::ANONYMOUS_USER,
+                        ]);
+                    }
+                }
+            }
+        } else {
             $result = $DB->request([
                 'FROM' => 'glpi_plugin_filacircular_group_coordinators',
                 'WHERE' => [
