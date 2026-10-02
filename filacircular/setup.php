@@ -14,9 +14,9 @@ function plugin_filacircular_ensure_notifications()
         [
             'event' => 'last_active_removed',
             'name' => 'Alerta - grupo sem técnico ativo',
-            'comment' => '',
+            'comment' => 'Notificação enviada quando o último técnico ativo do grupo é removido.',
             'template_name' => 'Alerta - grupo sem técnico ativo',
-            'template_comment' => '',
+            'template_comment' => 'Notificação enviada quando o último técnico ativo do grupo é removido.',
             'subject' => 'Alerta: grupo ##filacircular.group## sem técnico ativo',
             'content_text' => "Atenção!\n\n"
                 . "O grupo ##filacircular.group## ficou sem técnicos ativos disponíveis para atendimento pela FilaCircular.\n\n"
@@ -75,7 +75,7 @@ function plugin_filacircular_ensure_notifications()
 
             $translation->add([
                 'notificationtemplates_id' => $template_id,
-                'language'                 => 'pt_BR',
+                'language'                 => '',
                 'subject'                  => $notification_data['subject'],
                 'content_text'             => $notification_data['content_text'],
                 'content_html'             => ''
@@ -195,6 +195,7 @@ function plugin_filacircular_install($params = [])
                 `groups_id` int NOT NULL,
                 `enabled` tinyint NOT NULL DEFAULT '0',
                 `allow_coordinator_management` tinyint NOT NULL DEFAULT '0',
+                `emergency_email` varchar(255) DEFAULT NULL,
                 `next_user_id` int DEFAULT NULL,
                 PRIMARY KEY (`groups_id`),
                 KEY `next_user_id` (`next_user_id`)

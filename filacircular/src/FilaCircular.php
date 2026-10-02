@@ -16,7 +16,7 @@ class FilaCircular extends CommonGLPI
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
         if (!$withtemplate && $item instanceof \Group) {
-            return self::createTabEntry('FilaCircular', 0, $item::class);
+            return self::createTabEntry('FilaCircular', 0, $item::class, 'ti ti-refresh');
         }
 
         return '';
