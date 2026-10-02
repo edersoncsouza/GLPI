@@ -383,30 +383,26 @@ O objetivo é que toda configuração que pertença especificamente à FilaCircu
 
 Os próximos ajustes devem continuar sendo definidos antes da implementação.
 
-A instalação do plugin já cria automaticamente os recursos específicos de notificação necessários à FilaCircular.
+A instalação e a atualização do plugin criam e mantêm automaticamente os recursos específicos de notificação necessários à FilaCircular.
 
-Durante uma atualização do FilaCircular, o plugin deverá verificar e corrigir automaticamente os recursos necessários de:
+Durante uma atualização do FilaCircular, o plugin verifica e cria, quando necessário, os recursos de:
 
 - `Notification`;
 - `NotificationTemplate`;
 - traduções dos templates;
 - relações entre notificações e templates;
-- destinatários específicos da FilaCircular.
+- destinatário específico do plugin.
 
-Esse processo deverá:
+Esse processo:
 
-- evitar a criação de recursos duplicados;
-- preservar configurações já existentes;
-- corrigir recursos ausentes ou incompletos;
-- permitir a evolução dos recursos de notificação entre versões do plugin.
+- evita a criação de recursos duplicados;
+- preserva configurações já existentes;
+- preserva traduções já existentes, permitindo sua personalização pelo administrador;
+- preserva destinatários adicionais já configurados pelo administrador;
+- adiciona o destinatário específico da FilaCircular quando ele estiver ausente;
+- não remove destinatários existentes durante uma atualização.
 
-Entre os pontos de evolução estão:
-
-- implementar o mecanismo de atualização do plugin;
-- garantir a preservação e atualização automática dos recursos de notificação durante upgrades;
-- revisar a experiência visual das confirmações das operações nativas;
-- continuar os testes de instalação limpa e atualização do plugin;
-- validar o comportamento completo da FilaCircular em um ambiente novo, sem configurações manuais específicas do plugin.
+O mecanismo de atualização foi testado em upgrades sucessivos do plugin, incluindo a verificação de preservação de destinatários adicionais.
 
 ## Princípios de desenvolvimento
 

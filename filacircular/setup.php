@@ -1,6 +1,6 @@
 <?php
 
-define('PLUGIN_FILACIRCULAR_VERSION', '1.0.0');
+define('PLUGIN_FILACIRCULAR_VERSION', '1.0.4');
 define('PLUGIN_FILACIRCULAR_MIN_GLPI_VERSION', '11.0.3');
 define('PLUGIN_FILACIRCULAR_MAX_GLPI_VERSION', '11.0.99');
 
@@ -58,35 +58,12 @@ function plugin_filacircular_ensure_notifications()
         }
 
         if ($notification_id === 0) {
-
-            $template = new \NotificationTemplate();
-
-            $template_id = $template->add([
-                'name'     => $notification_data['template_name'],
-                'itemtype' => $itemtype,
-                'comment'  => $notification_data['template_comment']
-            ]);
-
-            if (!$template_id) {
-                continue;
-            }
-
-            $translation = new \NotificationTemplateTranslation();
-
-            $translation->add([
-                'notificationtemplates_id' => $template_id,
-                'language'                 => '',
-                'subject'                  => $notification_data['subject'],
-                'content_text'             => $notification_data['content_text'],
-                'content_html'             => ''
-            ]);
-
             $notification = new \Notification();
 
             $notification_id = $notification->add([
                 'name'             => $notification_data['name'],
                 'entities_id'      => 0,
-                'itemtype'        => $itemtype,
+                'itemtype'         => $itemtype,
                 'event'            => $notification_data['event'],
                 'comment'          => $notification_data['comment'],
                 'is_recursive'     => 0,
@@ -94,11 +71,92 @@ function plugin_filacircular_ensure_notifications()
                 'allow_response'   => 0,
                 'attach_documents' => -2
             ]);
+        }
 
-            if (!$notification_id) {
-                continue;
-            }
+        if (!$notification_id) {
+            continue;
+        }
 
+        $template_id = 0;
+
+        $result = $DB->request([
+            'FROM' => 'glpi_notificationtemplates',
+            'WHERE' => [
+                'itemtype' => $itemtype,
+                'name'     => $notification_data['template_name']
+            ],
+            'LIMIT' => 1
+        ]);
+
+        foreach ($result as $row) {
+            $template_id = (int) $row['id'];
+            break;
+        }
+
+        if ($template_id === 0) {
+            $template = new \NotificationTemplate();
+
+            $template_id = $template->add([
+                'name'     => $notification_data['template_name'],
+                'itemtype' => $itemtype,
+                'comment'  => $notification_data['template_comment']
+            ]);
+        }
+
+        if (!$template_id) {
+            continue;
+        }
+
+        $translation_id = 0;
+
+        $result = $DB->request([
+            'FROM' => 'glpi_notificationtemplatetranslations',
+            'WHERE' => [
+                'notificationtemplates_id' => $template_id,
+                'language'                 => ''
+            ],
+            'LIMIT' => 1
+        ]);
+
+        foreach ($result as $row) {
+            $translation_id = (int) $row['id'];
+            break;
+        }
+
+        if ($translation_id === 0) {
+            $translation = new \NotificationTemplateTranslation();
+
+            $translation_id = $translation->add([
+                'notificationtemplates_id' => $template_id,
+                'language'                 => '',
+                'subject'                  => $notification_data['subject'],
+                'content_text'             => $notification_data['content_text'],
+                'content_html'             => ''
+            ]);
+        }
+
+        if (!$translation_id) {
+            continue;
+        }
+
+        $relation_exists = false;
+
+        $result = $DB->request([
+            'FROM' => 'glpi_notifications_notificationtemplates',
+            'WHERE' => [
+                'notifications_id'         => $notification_id,
+                'notificationtemplates_id' => $template_id,
+                'mode'                     => 'mailing'
+            ],
+            'LIMIT' => 1
+        ]);
+
+        foreach ($result as $row) {
+            $relation_exists = true;
+            break;
+        }
+
+        if (!$relation_exists) {
             $notification_notificationtemplate =
                 new \Notification_NotificationTemplate();
 
@@ -109,13 +167,34 @@ function plugin_filacircular_ensure_notifications()
             ]);
         }
 
-        \NotificationTarget::updateTargets([
-            'itemtype'        => $itemtype,
-            'notifications_id' => $notification_id,
-            '_targets'        => [
-                \Notification::USER_TYPE . '_1000'
-            ]
+        $target_exists = false;
+
+        $result = $DB->request([
+            'FROM' => 'glpi_notificationtargets',
+            'WHERE' => [
+                'notifications_id' => $notification_id,
+                'type'             => \Notification::USER_TYPE,
+                'items_id'         => 1000,
+                'is_exclusion'     => 0
+            ],
+            'LIMIT' => 1
         ]);
+
+        foreach ($result as $row) {
+            $target_exists = true;
+            break;
+        }
+
+        if (!$target_exists) {
+            $notification_target = new \NotificationTarget();
+
+            $notification_target->add([
+                'notifications_id' => $notification_id,
+                'type'             => \Notification::USER_TYPE,
+                'items_id'         => 1000,
+                'is_exclusion'     => 0
+            ]);
+        }
     }
 }
 
@@ -165,7 +244,7 @@ function plugin_version_filacircular()
     ];
 }
 
-function plugin_filacircular_install($params = [])
+function plugin_filacircular_upgrade_tables()
 {
     global $DB;
 
@@ -201,6 +280,12 @@ function plugin_filacircular_install($params = [])
                 KEY `next_user_id` (`next_user_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
         ");
+    } elseif (!$DB->fieldExists($table, 'emergency_email')) {
+        $DB->doQuery("
+            ALTER TABLE `$table`
+            ADD COLUMN `emergency_email` varchar(255) DEFAULT NULL
+            AFTER `allow_coordinator_management`
+        ");
     }
 
     $table = 'glpi_plugin_filacircular_group_coordinators';
@@ -218,6 +303,11 @@ function plugin_filacircular_install($params = [])
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
         ");
     }
+}
+
+function plugin_filacircular_install($params = [])
+{
+    plugin_filacircular_upgrade_tables();
 
     plugin_filacircular_ensure_notifications();
 
