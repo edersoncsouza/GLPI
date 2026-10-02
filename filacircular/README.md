@@ -5,7 +5,7 @@ Plugin para GLPI 11 destinado ao gerenciamento da participação de técnicos em
 ## Ambiente
 
 - GLPI: 11.0.9
-- Plugin: FilaCircular 1.0.0
+- Plugin: FilaCircular 1.0.4
 - Banco de dados: MySQL 8.4
 - Execução: Docker
 - Namespace: `GlpiPlugin\Filacircular`
@@ -104,6 +104,8 @@ Recomenda-se que, antes de remover o último Coordenador, outro técnico seja pr
 
 Quando o usuário é efetivamente removido da associação nativa com o grupo, sua condição de Coordenador da FilaCircular naquele grupo também é removida automaticamente.
 
+Quando a remoção do último Coordenador ocorre pela operação nativa do GLPI, a FilaCircular gera o evento específico de notificação `last_coordinator_removed`.
+
 ## Participantes e associação ao grupo
 
 A associação nativa do usuário ao grupo é controlada pelo próprio GLPI.
@@ -147,11 +149,17 @@ Um técnico pode, por exemplo:
 
 Um grupo com a FilaCircular ativa deve possuir pelo menos um participante ativo.
 
-A FilaCircular impede a desativação do último participante ativo através da configuração própria do plugin.
+A FilaCircular impede a **desativação pela configuração própria do plugin** do último participante ativo.
+
+Quando o usuário tenta desativar o último participante ativo pela interface da FilaCircular, a operação é bloqueada e é apresentada uma mensagem informando:
+
+- que ele é o último técnico ativo da FilaCircular naquele grupo;
+- que sua desativação deixaria os chamados do grupo sem atendimento pela FilaCircular;
+- que é necessário primeiro adicionar outro usuário ao grupo ou ativar um participante que esteja inativo.
 
 A remoção da associação nativa ao grupo é uma operação diferente.
 
-Quando a remoção nativa resultar em zero participantes ativos, aplica-se a regra específica de **Remoção do último participante ativo**.
+A remoção nativa do usuário pelo GLPI não é bloqueada pela FilaCircular. Se essa remoção resultar em zero participantes ativos, aplica-se a regra específica de **Remoção do último participante ativo**.
 
 ## Distribuição
 
@@ -186,20 +194,19 @@ O GLPI continua responsável pelo processamento normal do chamado e pelo relacio
 
 ## Remoção do último participante ativo
 
-Quando um usuário está sendo removido de um grupo e é o último participante ativo da FilaCircular naquele grupo, o sistema apresenta uma confirmação antes de permitir a remoção.
+Quando um usuário é removido da associação nativa com um grupo e é o último participante ativo da FilaCircular naquele grupo, o sistema identifica essa condição antes da remoção efetiva.
 
-A confirmação informa que o grupo ficará sem participantes ativos para a distribuição e atendimento pela FilaCircular.
-
-O usuário pode:
-
-- cancelar a operação, impedindo a remoção;
-- confirmar a operação, permitindo que a remoção nativa do GLPI prossiga.
+A operação nativa do GLPI continua sendo responsável pela remoção efetiva da associação do usuário com o grupo.
 
 A verificação da condição de último participante ativo é realizada pelo backend.
 
-O JavaScript apenas intercepta o envio da operação nativa, consulta o backend e apresenta a confirmação quando necessário.
+O JavaScript intercepta o envio da operação nativa, consulta o backend e apresenta a confirmação quando necessário.
 
-A operação nativa do GLPI continua sendo responsável pela remoção efetiva da associação do usuário com o grupo.
+A remoção nativa continua permitida após a confirmação.
+
+Quando essa remoção provoca a transição do grupo de pelo menos 1 participante ativo para 0 participantes ativos, é gerado o evento de notificação `last_active_removed`, desde que a FilaCircular esteja ativa para o grupo.
+
+Se o grupo já estiver com 0 participantes ativos antes da operação, nenhuma nova notificação é gerada.
 
 ## Notificação de ausência de participante ativo
 
@@ -220,6 +227,27 @@ A mensagem deverá informar:
 
 Se o grupo já estiver com 0 participantes ativos antes da operação, nenhuma nova notificação será gerada.
 
+## Notificação de ausência de Coordenador
+
+Quando uma operação nativa do GLPI remover o último Coordenador da FilaCircular de um grupo, e a FilaCircular estiver ativa para esse grupo, será gerada uma notificação pelo mecanismo nativo de notificações do GLPI.
+
+O evento utilizado é:
+
+`last_coordinator_removed`
+
+A notificação é destinada:
+
+- ao Coordenador removido, quando houver e-mail cadastrado;
+- aos demais destinatários específicos configurados para a notificação;
+- ao e-mail de emergência configurado para o grupo, caso exista.
+
+A mensagem informa:
+
+- o grupo que ficou sem Coordenador;
+- o técnico removido;
+- a data e hora da ocorrência;
+- que o grupo ficou sem Coordenador e necessita de regularização.
+
 ## E-mail de emergência
 
 Cada grupo pode possuir um único e-mail de emergência.
@@ -228,7 +256,7 @@ O e-mail de emergência é configurado na área administrativa da FilaCircular.
 
 Somente usuários com permissão de administrador do GLPI podem visualizá-lo e alterá-lo.
 
-O e-mail de emergência é utilizado como destinatário adicional das notificações de ausência de participantes ativos.
+O e-mail de emergência é utilizado como destinatário adicional das notificações de ausência de participantes ativos e de ausência de Coordenador.
 
 ## Mecanismo de notificações
 
@@ -244,9 +272,10 @@ O plugin utiliza:
 
 O plugin não realiza envio de e-mail diretamente.
 
-O evento de ausência de participantes ativos é disparado pelo plugin através do evento:
+Os eventos específicos da FilaCircular são:
 
-`last_active_removed`
+- `last_active_removed`;
+- `last_coordinator_removed`.
 
 O plugin fornece os dados necessários para que o mecanismo de notificações determine:
 
@@ -260,14 +289,26 @@ O plugin fornece os dados necessários para que o mecanismo de notificações de
 
 As configurações específicas de notificações necessárias ao funcionamento da FilaCircular são responsabilidade do próprio plugin.
 
-A instalação ou atualização do plugin deve criar ou atualizar os recursos necessários para que a notificação esteja operacional.
+A instalação ou atualização do plugin cria e mantém automaticamente os recursos necessários para que as notificações estejam operacionais.
 
-O administrador não deve precisar configurar manualmente, para o funcionamento da FilaCircular:
+Durante uma atualização, o plugin verifica e cria, quando necessário, os recursos de:
 
-- Notifications;
-- Notification Templates;
+- `Notification`;
+- `NotificationTemplate`;
 - traduções dos templates;
-- destinatários específicos do plugin.
+- relações entre notificações e templates;
+- destinatário específico do plugin.
+
+Esse processo:
+
+- evita a criação de recursos duplicados;
+- preserva configurações já existentes;
+- preserva traduções já existentes, permitindo sua personalização pelo administrador;
+- preserva destinatários adicionais já configurados pelo administrador;
+- adiciona o destinatário específico da FilaCircular quando ele estiver ausente;
+- não remove destinatários existentes durante uma atualização.
+
+O mecanismo de atualização foi testado em upgrades sucessivos do plugin, incluindo a verificação de preservação de destinatários adicionais.
 
 A responsabilidade do GLPI pela fila e pelo envio permanece preservada.
 
@@ -320,6 +361,7 @@ O plugin é responsável por:
 - controlar o e-mail de emergência;
 - realizar a distribuição Round-Robin;
 - integrar-se à criação de chamados;
+- validar a desativação do último participante ativo;
 - validar a remoção do último participante ativo;
 - validar a remoção do último Coordenador;
 - gerar eventos de notificação;
@@ -351,6 +393,7 @@ O objetivo é que toda configuração que pertença especificamente à FilaCircu
 - Criação automática da participação ao entrar no grupo.
 - Reativação automática da participação quando aplicável.
 - Ativação e desativação de participantes.
+- Bloqueio da desativação do último participante ativo pela configuração da FilaCircular.
 - Participação independente por grupo.
 - Coordenadores por grupo.
 - Múltiplos Coordenadores por grupo.
@@ -371,38 +414,38 @@ O objetivo é que toda configuração que pertença especificamente à FilaCircu
 - Remoção automática da condição de Coordenador quando o usuário é removido do grupo nativo.
 - Configuração de e-mail de emergência por grupo.
 - Geração do evento `last_active_removed`.
+- Geração do evento `last_coordinator_removed`.
 - `NotificationTargetFilaCircular`.
 - Destinação da notificação aos Coordenadores.
 - Destinação da notificação ao e-mail de emergência.
+- Destinação específica da notificação de remoção do último Coordenador.
 - Utilização da fila nativa de notificações do GLPI.
 - Envio real de notificação por e-mail testado.
 - Processamento da fila de notificações pelo `queuednotification`.
 - Execução das Automatic Actions em modo CLI no ambiente Docker.
+- Criação automática das tabelas necessárias durante instalação/atualização.
+- Atualização automática da estrutura das tabelas quando necessário.
+- Criação automática dos recursos de notificação.
+- Preservação de traduções existentes dos templates.
+- Preservação de destinatários adicionais existentes durante atualizações.
+- Prevenção de duplicação dos recursos de notificação.
+- Testes de atualização entre versões do plugin.
+- Teste de preservação de destinatário adicional durante atualização.
+- Limpeza dos dados utilizados nos testes de atualização.
 
 ## Próximos ajustes
 
 Os próximos ajustes devem continuar sendo definidos antes da implementação.
 
-A instalação e a atualização do plugin criam e mantêm automaticamente os recursos específicos de notificação necessários à FilaCircular.
+Antes de iniciar uma nova alteração de código, deve ser revisado o estado atual da FilaCircular para identificar:
 
-Durante uma atualização do FilaCircular, o plugin verifica e cria, quando necessário, os recursos de:
+- regras já implementadas;
+- regras ainda não implementadas;
+- testes ainda necessários;
+- diferenças entre o comportamento documentado e o comportamento efetivamente implementado;
+- eventuais pontos da interface que ainda precisem de revisão.
 
-- `Notification`;
-- `NotificationTemplate`;
-- traduções dos templates;
-- relações entre notificações e templates;
-- destinatário específico do plugin.
-
-Esse processo:
-
-- evita a criação de recursos duplicados;
-- preserva configurações já existentes;
-- preserva traduções já existentes, permitindo sua personalização pelo administrador;
-- preserva destinatários adicionais já configurados pelo administrador;
-- adiciona o destinatário específico da FilaCircular quando ele estiver ausente;
-- não remove destinatários existentes durante uma atualização.
-
-O mecanismo de atualização foi testado em upgrades sucessivos do plugin, incluindo a verificação de preservação de destinatários adicionais.
+A documentação deste projeto é a fonte de verdade das regras de negócio.
 
 ## Princípios de desenvolvimento
 
@@ -423,4 +466,3 @@ Não devem ser inferidos comportamentos de negócio que não estejam definidos n
 Configurações que pertencem à responsabilidade do plugin devem ser automatizadas pelo próprio plugin sempre que houver suporte técnico para isso.
 
 Configurações que pertencem à infraestrutura ou à configuração global do GLPI devem permanecer externas ao plugin e ser documentadas com instruções claras para o administrador.
-
