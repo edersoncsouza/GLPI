@@ -39,15 +39,9 @@ class NotificationTargetFilaCircular extends NotificationTarget
 
     public function addAdditionalTargets($event = '')
     {
-        error_log('FilaCircular addAdditionalTargets executado: ' . $event);
-
         $this->addTarget(
             self::TARGET_RECIPIENTS,
             'Coordenadores e e-mail de emergência'
-        );
-
-        error_log(
-            'FilaCircular targets: ' . print_r($this->notification_targets, true)
         );
     }
 

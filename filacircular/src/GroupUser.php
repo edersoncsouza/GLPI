@@ -27,13 +27,6 @@ class GroupUser
 
     public static function purge($groupUser)
     {
-        file_put_contents(
-            '/tmp/filacircular_purge_debug.txt',
-            date('Y-m-d H:i:s')
-            . ' login_user_id=' . (int) \Session::getLoginUserID()
-            . PHP_EOL,
-            FILE_APPEND
-        );
 
         global $DB;
 
@@ -88,18 +81,6 @@ class GroupUser
             $last_coordinator = false;
         }
 
-        file_put_contents(
-            '/tmp/filacircular_purge_debug.txt',
-            date('Y-m-d H:i:s')
-            . ' groups_id=' . $groups_id
-            . ' users_id=' . $users_id
-            . ' active_count=' . $active_count
-            . ' last_active=' . ($last_active_participant ? '1' : '0')
-            . ' coordinator_count=' . $coordinator_count
-            . ' last_coordinator=' . ($last_coordinator ? '1' : '0')
-            . PHP_EOL,
-            FILE_APPEND
-        );
 
         $DB->doQuery("
             DELETE FROM `$table`
@@ -164,14 +145,6 @@ class GroupUser
             }
 
             if ($fila_circular_ativa) {
-                file_put_contents(
-                    '/tmp/filacircular_purge_debug.txt',
-                    date('Y-m-d H:i:s')
-                    . ' removed_by_user_id='
-                    . (int) \Session::getLoginUserID()
-                    . PHP_EOL,
-                    FILE_APPEND
-                );
                 $notification_result = NotificationEvent::raiseEvent(
                     'last_coordinator_removed',
                     new FilaCircular(),
@@ -182,14 +155,6 @@ class GroupUser
                     ]
                 );
 
-                file_put_contents(
-                    '/tmp/filacircular_purge_debug.txt',
-                    date('Y-m-d H:i:s')
-                    . ' notification_result='
-                    . var_export($notification_result, true)
-                    . PHP_EOL,
-                    FILE_APPEND
-                );
             }
         }
 
