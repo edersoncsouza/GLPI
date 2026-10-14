@@ -285,6 +285,17 @@ O plugin fornece os dados necessários para que o mecanismo de notificações de
 - Coordenadores do grupo;
 - e-mail de emergência configurado.
 
+O evento de ausência de participantes ativos é disparado pelo plugin através do evento:
+
+`last_active_removed`
+
+O evento de ausência de Coordenador é disparado pelo plugin através do evento:
+
+`last_coordinator_removed`
+
+Esse evento foi testado com a remoção nativa do último Coordenador de um grupo com a FilaCircular ativa. O teste confirmou o envio da notificação ao Coordenador removido, quando possui e-mail cadastrado, e ao e-mail de emergência configurado para o grupo.
+
+
 ### Configuração automática
 
 As configurações específicas de notificações necessárias ao funcionamento da FilaCircular são responsabilidade do próprio plugin.
@@ -415,6 +426,7 @@ O objetivo é que toda configuração que pertença especificamente à FilaCircu
 - Configuração de e-mail de emergência por grupo.
 - Geração do evento `last_active_removed`.
 - Geração do evento `last_coordinator_removed`.
+- Notificação de ausência de Coordenador testada com envio ao Coordenador removido e ao e-mail de emergência.
 - `NotificationTargetFilaCircular`.
 - Destinação da notificação aos Coordenadores.
 - Destinação da notificação ao e-mail de emergência.

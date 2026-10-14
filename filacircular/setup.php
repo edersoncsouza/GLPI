@@ -316,5 +316,57 @@ function plugin_filacircular_install($params = [])
 
 function plugin_filacircular_uninstall($params = [])
 {
+    global $DB;
+
+    $itemtype = \GlpiPlugin\Filacircular\FilaCircular::class;
+
+    $notification_ids = [];
+
+    $result = $DB->request([
+        'SELECT' => 'id',
+        'FROM'   => 'glpi_notifications',
+        'WHERE'  => [
+            'itemtype' => $itemtype
+        ]
+    ]);
+
+    foreach ($result as $row) {
+        $notification_ids[] = (int) $row['id'];
+    }
+
+    foreach ($notification_ids as $notification_id) {
+        $notification = new \Notification();
+
+        if ($notification->getFromDB($notification_id)) {
+            $notification->delete([
+                'id' => $notification_id
+            ], true);
+        }
+    }
+
+    $template_ids = [];
+
+    $result = $DB->request([
+        'SELECT' => 'id',
+        'FROM'   => 'glpi_notificationtemplates',
+        'WHERE'  => [
+            'itemtype' => $itemtype
+        ]
+    ]);
+
+    foreach ($result as $row) {
+        $template_ids[] = (int) $row['id'];
+    }
+
+    foreach ($template_ids as $template_id) {
+        $template = new \NotificationTemplate();
+
+        if ($template->getFromDB($template_id)) {
+            $template->delete([
+                'id' => $template_id
+            ], true);
+        }
+    }
+
     return true;
 }
