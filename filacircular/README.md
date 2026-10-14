@@ -1,6 +1,6 @@
 # FilaCircular
 
-Plugin para GLPI 11 destinado ao gerenciamento da participação de técnicos em grupos e à distribuição circular de chamados entre os técnicos elegíveis da Prefeitura de Cachoeirinha.
+Plugin para GLPI 11 destinado ao gerenciamento da participação de técnicos em grupos e à distribuição circular de chamados entre os técnicos elegíveis.
 
 ## Ambiente
 

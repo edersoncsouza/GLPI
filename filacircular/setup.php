@@ -233,7 +233,7 @@ function plugin_version_filacircular()
     return [
         'name' => 'FilaCircular',
         'version' => PLUGIN_FILACIRCULAR_VERSION,
-        'author' => 'Prefeitura de Cachoeirinha',
+        'author' => 'FilaCircular',
         'license' => 'GPLv3',
         'requirements' => [
             'glpi' => [
